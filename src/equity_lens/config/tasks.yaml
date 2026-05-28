@@ -1,17 +1,125 @@
-research_task:
+map_universe:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Today is {current_date}. Normalize the investment universe "{universe}" into
+    an actionable search vocabulary for equity discovery in {geography} markets.
+    Deliver: (1) 6-12 core search terms, (2) 4-8 adjacent/synonym terms,
+    (3) a one-line scope note defining what is in vs out with examples, and
+    (4) 3-8 common pitfalls that cause false positives in equity screening.
+    Use lowercase tokens unless proper nouns are required.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A YAML block ONLY (no prose) with keys:
+      core_terms: [string, ...]
+      adjacent_terms: [string, ...]
+      scope_note: "one line scoped note"
+      pitfalls: [string, ...]
+  agent: universe_mapper
+  output_file: output/01_universe_mapping.yaml
 
-reporting_task:
+discover_candidates:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Today is {current_date}. Using the universe mapping, identify 4-6 publicly
+    traded companies with primary exposure to {universe} in {geography} markets.
+    Rules:
+    - Only include companies listed on NYSE, NASDAQ, LSE, Euronext, TSE, HKEX,
+      or SGX with market cap above {min_size} USD.
+    - Exclude private companies, OTC-only listings, and conglomerates where
+      {universe} exposure is incidental or minor.
+    - Normalize tickers to UPPERCASE; include exchange if known; deduplicate
+      strictly by ticker.
+    - Provide a concise match reason (max 140 chars) for each candidate.
+    - All data must be current as of {current_date}.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A JSON array ONLY (no prose). Each object must include:
+      ticker (str, UPPERCASE), name (str), exchange (str),
+      country (str), market_cap_usd (float), match_reason (str, max 140 chars)
+  agent: equity_scout
+  output_file: output/02_candidates.json
+  context:
+    - map_universe
+
+screen_fundamentals:
+  description: >
+    Today is {current_date}. For each candidate collect recent comparable financial
+    metrics. Apply hard filter: market_cap_usd >= {min_size}. Guidance:
+    - Use TTM or latest fiscal values; include as_of_date for each row.
+    - Do NOT fabricate numbers; set null when unavailable and note the source.
+    - All data must reflect filings or market data available as of {current_date}.
+    - Reject any data older than 12 months from {current_date}.
+    - Keep units explicit in USD where applicable.
+  expected_output: >
+    A JSON array ONLY (no prose). One row per ticker with fields:
+      ticker, name, market_cap_usd, pe_ttm, ev_ebitda, revenue_cagr_3y,
+      operating_margin_ttm, fcf_margin_ttm, net_debt_to_ebitda,
+      dividend_yield, as_of_date, notes
+  agent: fundamental_screener
+  output_file: output/03_fundamentals.json
+  context:
+    - discover_candidates
+
+research_candidates:
+  description: >
+    Today is {current_date}. For each screened company produce a comprehensive
+    research note. Focus on:
+    - Competitive positioning within {universe}
+    - Revenue growth trajectory and recent earnings catalysts
+    - AI/technology exposure and product roadmap where relevant
+    - Key risks specific to each company
+    - Suitability for a {horizon}-month holding period with {strategy} approach
+    All analysis must use data current as of {current_date}. Do not reference
+    results, ratings, or news older than 6 months from {current_date}.
+  expected_output: >
+    A structured research note per company covering: market position in {universe},
+    most recent financials as of {current_date}, growth prospects, competitive moat,
+    key risks, recent catalysts, and investment suitability for {strategy} strategy
+    over {horizon} months.
+  agent: market_analyst
+  output_file: output/04_research.md
+  context:
+    - screen_fundamentals
+
+score_and_rank:
+  description: >
+    Today is {current_date}. Using the screened fundamentals, compute transparent
+    reproducible composite scores and rank all candidates. Components:
+    - valuation_score: cheaper is better (inverse rank of pe_ttm and ev_ebitda)
+    - quality_score: higher operating/FCF margins, lower net_debt_to_ebitda
+    - growth_score: higher revenue_cagr_3y
+    Apply {strategy} weighting:
+      value:    60% valuation, 20% quality, 20% growth
+      growth:   20% valuation, 20% quality, 60% growth
+      balanced: 40% valuation, 30% quality, 30% growth
+    Impute missing values with neutral ranks. Document tie-breakers:
+    higher quality_score, then higher growth_score, then larger market_cap_usd.
+    State exact method in scoring_note.
+  expected_output: >
+    A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
+      ticker, name, valuation_score, quality_score, growth_score,
+      composite_score, scoring_note
+  agent: valuation_scorer
+  output_file: output/05_scores.json
+  context:
+    - screen_fundamentals
+
+compile_recommendation:
+  description: >
+    Today is {current_date}. Analyze all research and scores to select the single
+    best investment opportunity in {universe} for a {strategy} investor with a
+    {horizon}-month holding horizon. The chosen company must be listed on a major
+    exchange with market cap above {min_size} USD.
+    You MUST use the Send Push Notification tool FIRST to alert the user with:
+    company name, ticker, and a one-sentence rationale. Then produce the final
+    structured report.
+  expected_output: >
+    A structured report containing:
+    1. CHOSEN COMPANY: name, ticker, exchange, 80-140 word thesis covering the
+    "why now" and edge vs peers, 3-5 key drivers, 2-3 red flags, one-year view.
+    All data current as of {current_date}.
+    2. REJECTED COMPANIES: ticker and concise rejection reason for each.
+    3. KEY RISKS: top 2-3 company-specific risks to monitor over {horizon} months.
+    4. SCORING SUMMARY: brief note on how {strategy} weighting drove the selection.
+  agent: investment_advisor
+  output_file: output/06_recommendation.md
+  context:
+    - research_candidates
+    - score_and_rank
+    - discover_candidates
