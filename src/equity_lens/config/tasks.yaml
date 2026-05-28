@@ -29,9 +29,10 @@ discover_candidates:
     - Provide a concise match reason (max 140 chars) for each candidate.
     - All data must be current as of {current_date}.
   expected_output: >
-    A JSON array ONLY (no prose). Each object must include:
-      ticker (str, UPPERCASE), name (str), exchange (str),
-      country (str), market_cap_usd (float), match_reason (str, max 140 chars)
+      A JSON array ONLY. No prose, no preamble, no explanation. Start directly 
+      with [ and end with ]. Each object must include:
+        ticker (str, UPPERCASE), name (str), exchange (str),
+        country (str), market_cap_usd (float), match_reason (str, max 140 chars)
   agent: equity_scout
   output_file: output/02_candidates.json
   context:
