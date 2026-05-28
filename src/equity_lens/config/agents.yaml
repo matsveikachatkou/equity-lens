@@ -70,7 +70,7 @@ valuation_scorer:
     score drivers and handles outliers robustly.
   allow_delegation: false
   cache: true
-  max_iter: 18
+  max_iter: 10
 
 investment_advisor:
   role: >

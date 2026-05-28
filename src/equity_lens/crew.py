@@ -3,21 +3,20 @@ from crewai.memory.short_term.short_term_memory import ShortTermMemory
 from crewai.memory.long_term.long_term_memory import LongTermMemory
 from crewai.memory.entity.entity_memory import EntityMemory
 from crewai.project import CrewBase, agent, crew, task
-from crewai_tools import WebsiteSearchTool, ScrapeWebsiteTool, CodeInterpreterTool
-from .tools.search_tool import RobustSearchTool
+from crewai_tools import WebsiteSearchTool, ScrapeWebsiteTool, SerperDevTool
+from .tools.code_tool import RobustCodeTool
 from .tools.notify_tool import PushNotifyTool
 from .tools.finance_tool import YFinanceTool
 from .schemas import CandidateList, MetricsList, ScoredList
 from .tools.notify_tool import PushNotifyTool
 
 
-search_tool = RobustSearchTool()
+search_tool = SerperDevTool()
 web_rag = WebsiteSearchTool()
 scraper = ScrapeWebsiteTool()
-code_tool = CodeInterpreterTool()
+code_tool = RobustCodeTool()
 finance_tool = YFinanceTool()
 notify_tool = PushNotifyTool()
-
 
 default_llm = LLM(model="gpt-4o-mini")
 function_llm = LLM(model="gpt-4o-mini")
@@ -169,5 +168,4 @@ class EquityLens:
                 crew=None,
                 embedder_config=EMBEDDER_CONFIG,
             ),
-            max_rpm=10,
         )

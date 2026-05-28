@@ -94,7 +94,7 @@ score_and_rank:
     reproducible composite scores and rank all candidates. Components:
     - valuation_score: cheaper is better (inverse rank of pe_ttm and ev_ebitda)
     - quality_score: higher operating/FCF margins, lower net_debt_to_ebitda
-    - growth_score: higher revenue_cagr_3y
+    - growth_score: higher revenue_growth_yoy
     Apply {strategy} weighting:
       value:    60% valuation, 20% quality, 20% growth
       growth:   20% valuation, 20% quality, 60% growth
@@ -102,6 +102,14 @@ score_and_rank:
     Impute missing values with neutral ranks. Document tie-breakers:
     higher quality_score, then higher growth_score, then larger market_cap_usd.
     State exact method in scoring_note.
+    Important safeguards:
+    - If code execution fails after 2 attempts, compute scores manually
+      using simple arithmetic. Never leave composite_score as an
+      unevaluated expression — always compute to a plain number.
+    - Treat any None value as neutral rank equal to the midpoint of
+      available candidates.
+    - If fewer than 3 companies have data, rank based on available
+      metrics only and note limitations in scoring_note.
   expected_output: >
     A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
       ticker, name, valuation_score, quality_score, growth_score,
