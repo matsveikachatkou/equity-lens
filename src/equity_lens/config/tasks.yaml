@@ -29,9 +29,18 @@ discover_candidates:
       incidental or minor.
     - Normalize tickers to UPPERCASE; include exchange if known; deduplicate
       strictly by ticker.
-    - For European companies use yfinance-compatible tickers with exchange
-      suffix: .L for London, .AS for Amsterdam, .PA for Paris, .DE for
-      Frankfurt, .MI for Milan. Example: WISE.L, ADYEN.AS.
+    - Use yfinance-compatible ticker formats for all exchanges:
+      US stocks: plain ticker (NVDA, AAPL, MSFT)
+      London (LSE): ticker.L (WISE.L, AZN.L)
+      Amsterdam (Euronext NL): ticker.AS (ADYEN.AS, ASML.AS)
+      Paris (Euronext FR): ticker.PA (MC.PA, BNP.PA)
+      Frankfurt (XETRA): ticker.DE (SAP.DE, SIE.DE)
+      Milan (Borsa Italiana): ticker.MI (ENI.MI, ISP.MI)
+      Tokyo (TSE): ticker.T (6857.T, 7203.T)
+      Seoul (KRX): ticker.KS (000660.KS, 005930.KS)
+      Hong Kong (HKEX): ticker.HK (0700.HK, 9988.HK)
+      Taiwan (TWSE): ticker.TW (2330.TW, 2454.TW)
+      Singapore (SGX): ticker.SI (D05.SI, O39.SI)
     - Provide a concise match reason (max 140 chars) for each candidate.
     - If fewer than 4 companies meet all criteria in {geography}, expand
       search to global markets to reach at least 4 candidates.
@@ -41,7 +50,7 @@ discover_candidates:
   expected_output: >
     A JSON array ONLY. No prose, no preamble, no explanation. Start directly
     with [ and end with ]. Each object must include:
-      ticker (str, UPPERCASE with exchange suffix if European), name (str),
+      ticker (str, UPPERCASE with exchange suffix if non-US), name (str),
       exchange (str), country (str), market_cap_usd (float),
       match_reason (str, max 140 chars)
   agent: equity_scout
