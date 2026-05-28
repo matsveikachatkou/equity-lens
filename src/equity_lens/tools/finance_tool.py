@@ -1,6 +1,7 @@
 from crewai.tools import BaseTool
 from typing import Type, Any
 from pydantic import BaseModel, Field
+from decimal import Decimal
 import yfinance as yf
 import json
 
@@ -78,7 +79,10 @@ class YFinanceTool(BaseTool):
             currency = info.get("currency", "USD")
             fx_rate = self._get_usd_rate(currency)
             market_cap_local = info.get("marketCap")
-            market_cap_usd = round(market_cap_local * fx_rate) if market_cap_local else None
+            if market_cap_local:
+                market_cap_usd = int(Decimal(str(market_cap_local)) * Decimal(str(fx_rate)))
+            else:
+                market_cap_usd = None
 
             data = {
                 "ticker": used_ticker,
