@@ -1,6 +1,6 @@
 # Equity Lens
 
-An AI-powered multi-agent investment research pipeline built with CrewAI. Given an investment universe and strategy preference, Equity Lens autonomously discovers publicly traded candidates, screens fundamentals, scores and ranks companies, and delivers a structured investment recommendation with push notification.
+An AI-powered multi-agent investment research pipeline built with CrewAI. Given an investment universe and strategy preference, Equity Lens autonomously discovers publicly traded candidates, screens fundamentals, scores and ranks companies, and delivers a structured investment recommendation.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Universe Mapping → Candidate Discovery → Fundamental Screening → Research 
 |---|---|---|
 | `universe_mapper` | Translates input universe into precise search vocabulary | Search, WebRAG |
 | `equity_scout` | Discovers 4-6 publicly traded candidates | Search, WebRAG, Scraper |
-| `fundamental_screener` | Collects fresh financials, applies market cap filter | Search, WebRAG, Scraper, Code |
+| `fundamental_screener` | Collects real financial metrics via yfinance | Search, WebRAG, Scraper, yFinance |
 | `market_analyst` | Produces per-company research notes | Search, WebRAG, Scraper |
 | `valuation_scorer` | Computes rank-based composite scores | Code Interpreter |
 | `investment_advisor` | Selects best opportunity, sends notification, writes report | Push Notification |
@@ -23,11 +23,17 @@ Universe Mapping → Candidate Discovery → Fundamental Screening → Research 
 
 **Sequential process over hierarchical** — deterministic execution with clear artifact handoff between stages. Each agent receives structured output from the previous stage via explicit context dependencies.
 
-**Rank-based scoring** — relative valuation using PE, EV/EBITDA, margins, and revenue CAGR. Robust to missing data via neutral rank imputation. Configurable weighting via `--strategy` flag.
+**Real financial data via yFinance** — the `fundamental_screener` uses a custom `YFinanceTool` to pull live market data (PE, EV/EBITDA, margins, FCF, net debt) directly from Yahoo Finance rather than relying on web scraping. European tickers are handled automatically with exchange suffixes (`.L`, `.AS`, `.PA`, `.DE`, `.MI`).
+
+**Rank-based scoring** — relative valuation using PE, EV/EBITDA, margins, and revenue growth. Robust to missing data via neutral rank imputation. Configurable weighting via `--strategy` flag.
 
 **Date injection** — `{current_date}` flows through every agent and task prompt, enforcing data freshness and preventing stale financial data from prior years entering the pipeline.
 
 **Tradability enforcement** — major exchange listing and market cap floor verified at discovery stage and re-enforced at recommendation stage. Private companies and OTC listings are explicitly excluded.
+
+**Geography auto-expansion** — when fewer than 4 companies meet the geography criteria, the pipeline automatically expands to global markets for comparison while prioritizing the specified geography in the final selection.
+
+**Robust tool wrappers** — custom wrappers around SerperDev and CodeInterpreter handle edge cases where the LLM passes malformed tool arguments, preventing pipeline failures.
 
 **Artifact chain** — numbered outputs (`01_` through `06_`) written to `output/` for full auditability and comparison across runs.
 
@@ -54,6 +60,8 @@ cd equity-lens
 uv sync
 ```
 
+> **Intel Mac users:** The project is configured for Intel Mac (x86_64) in `pyproject.toml`. If you are on Apple Silicon (M1/M2/M3) or Linux, remove the `[tool.uv]` section from `pyproject.toml` before running `uv sync`.
+
 **2. Configure environment variables:**
 
 ```bash
@@ -78,8 +86,11 @@ uv run equity_lens
 # Semiconductors, US market, growth strategy
 uv run equity_lens --universe "Semiconductors" --geography "US" --strategy growth
 
-# European fintech, value strategy, 6-month horizon
-uv run equity_lens --universe "Fintech" --geography "Europe" --strategy value --horizon 6
+# European fintech, balanced strategy, 12-month horizon
+uv run equity_lens --universe "Fintech" --geography "Europe" --strategy balanced
+
+# Healthcare Technology, Europe, value strategy
+uv run equity_lens --universe "Healthcare Technology" --geography "Europe" --strategy value
 
 # Large cap only (min $10B market cap)
 uv run equity_lens --universe "Cloud Computing" --min-size 10000000000
@@ -101,13 +112,22 @@ uv run equity_lens --universe "AI Infrastructure" --geography "US" --strategy gr
 
 ## Requirements
 
-- Python 3.10–3.13
+- Python 3.11 (Intel Mac) or 3.11–3.12 (Apple Silicon / Linux)
 - OpenAI API key
 - Serper API key
 - Pushover account (optional — for push notifications)
 
+## Tested universes
+
+| Universe | Geography | Strategy | Result |
+|---|---|---|---|
+| Semiconductors | US | growth | NVDA selected |
+| Fintech | Europe | balanced | Adyen selected |
+| Healthcare Technology | Europe | value | Smith & Nephew selected |
+
 ## Limitations
 
-- Relies on web search for financial data — results depend on SerperDev and scraped page quality
-- No connection to real-time market data APIs
+- `YFinanceTool` provides real market data but `revenue_growth_yoy` reflects TTM YoY growth, not a true 3-year CAGR
+- European tickers with non-standard formats may require manual ticker correction
 - Push notifications require a Pushover account
+- For production use, replace web scraping in the research stage with a dedicated financial data API (e.g. Polygon.io, Alpha Vantage)
