@@ -1,64 +1,164 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
+from crewai.memory.short_term.short_term_memory import ShortTermMemory
+from crewai.memory.long_term.long_term_memory import LongTermMemory
+from crewai.memory.entity.entity_memory import EntityMemory
 from crewai.project import CrewBase, agent, crew, task
-from crewai.agents.agent_builder.base_agent import BaseAgent
-from typing import List
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+from crewai_tools import SerperDevTool, WebsiteSearchTool, ScrapeWebsiteTool
+from crewai_tools import CodeInterpreterTool
+
+from .schemas import CandidateList, MetricsList, ScoredList
+from .tools.notify_tool import PushNotifyTool
+
+
+search_tool = SerperDevTool()
+web_rag = WebsiteSearchTool()
+scraper = ScrapeWebsiteTool()
+code_tool = CodeInterpreterTool()
+notify_tool = PushNotifyTool()
+
+
+default_llm = LLM(model="openai/gpt-4o-mini")
+orchestrator_llm = LLM(model="openai/gpt-4o")
+
+EMBEDDER_CONFIG = {
+    "provider": "openai",
+    "config": {
+        "model": "text-embedding-3-small",
+    },
+}
+
 
 @CrewBase
-class EquityLens():
-    """EquityLens crew"""
+class EquityLens:
+    """Equity Lens — multi-agent investment research pipeline"""
 
-    agents: List[BaseAgent]
-    tasks: List[Task]
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-    
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
     @agent
-    def researcher(self) -> Agent:
+    def universe_mapper(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
-            verbose=True
+            config=self.agents_config["universe_mapper"],
+            verbose=True,
+            tools=[search_tool, web_rag],
+            llm=default_llm,
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def equity_scout(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
-            verbose=True
+            config=self.agents_config["equity_scout"],
+            verbose=True,
+            tools=[search_tool, web_rag, scraper],
+            llm=default_llm,
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
-    @task
-    def research_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+    @agent
+    def fundamental_screener(self) -> Agent:
+        return Agent(
+            config=self.agents_config["fundamental_screener"],
+            verbose=True,
+            tools=[search_tool, web_rag, scraper, code_tool],
+            llm=default_llm,
+        )
+
+    @agent
+    def market_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config["market_analyst"],
+            verbose=True,
+            tools=[search_tool, web_rag, scraper],
+            llm=default_llm,
+        )
+
+    @agent
+    def valuation_scorer(self) -> Agent:
+        return Agent(
+            config=self.agents_config["valuation_scorer"],
+            verbose=True,
+            tools=[code_tool],
+            llm=default_llm,
+        )
+
+    @agent
+    def investment_advisor(self) -> Agent:
+        return Agent(
+            config=self.agents_config["investment_advisor"],
+            verbose=True,
+            tools=[notify_tool],
+            llm=default_llm,
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def map_universe(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            config=self.tasks_config["map_universe"],
+        )
+
+    @task
+    def discover_candidates(self) -> Task:
+        return Task(
+            config=self.tasks_config["discover_candidates"],
+            output_json=CandidateList,
+        )
+
+    @task
+    def screen_fundamentals(self) -> Task:
+        return Task(
+            config=self.tasks_config["screen_fundamentals"],
+            output_json=MetricsList,
+        )
+
+    @task
+    def research_candidates(self) -> Task:
+        return Task(
+            config=self.tasks_config["research_candidates"],
+        )
+
+    @task
+    def score_and_rank(self) -> Task:
+        return Task(
+            config=self.tasks_config["score_and_rank"],
+            output_json=ScoredList,
+        )
+
+    @task
+    def compile_recommendation(self) -> Task:
+        return Task(
+            config=self.tasks_config["compile_recommendation"],
         )
 
     @crew
     def crew(self) -> Crew:
-        """Creates the EquityLens crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=[
+                self.universe_mapper(),
+                self.equity_scout(),
+                self.fundamental_screener(),
+                self.market_analyst(),
+                self.valuation_scorer(),
+                self.investment_advisor(),
+            ],
+            tasks=[
+                self.map_universe(),
+                self.discover_candidates(),
+                self.screen_fundamentals(),
+                self.research_candidates(),
+                self.score_and_rank(),
+                self.compile_recommendation(),
+            ],
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+            planning=True,
+            memory=True,
+            embedder=EMBEDDER_CONFIG,
+            short_term_memory=ShortTermMemory(
+                crew=None,
+                embedder_config=EMBEDDER_CONFIG,
+            ),
+            long_term_memory=LongTermMemory(),
+            entity_memory=EntityMemory(
+                crew=None,
+                embedder_config=EMBEDDER_CONFIG,
+            ),
         )
