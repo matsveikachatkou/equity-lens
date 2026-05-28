@@ -2,22 +2,20 @@
 name = "equity_lens"
 version = "0.1.0"
 description = "equity-lens using crewAI"
-authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.10,<3.14"
+authors = [{ name = "Matsvei Kachatkou", email = "matsvei.kachatkou@gmail.com" }]
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "crewai[tools]>=0.130.0,<1.0.0"
+    "crewai[tools]==0.186.1",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "yfinance>=1.4.1",
 ]
-
 [project.scripts]
 equity_lens = "equity_lens.main:run"
-run_crew = "equity_lens.main:run"
-train = "equity_lens.main:train"
-replay = "equity_lens.main:replay"
-test = "equity_lens.main:test"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.crewai]
-type = "crew"
+[tool.hatch.build.targets.wheel]
+packages = ["src/equity_lens"]
+[tool.uv]
+required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]

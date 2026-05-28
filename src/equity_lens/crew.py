@@ -3,22 +3,24 @@ from crewai.memory.short_term.short_term_memory import ShortTermMemory
 from crewai.memory.long_term.long_term_memory import LongTermMemory
 from crewai.memory.entity.entity_memory import EntityMemory
 from crewai.project import CrewBase, agent, crew, task
-from crewai_tools import SerperDevTool, WebsiteSearchTool, ScrapeWebsiteTool
-from crewai_tools import CodeInterpreterTool
-
+from crewai_tools import WebsiteSearchTool, ScrapeWebsiteTool, CodeInterpreterTool
+from .tools.search_tool import RobustSearchTool
+from .tools.notify_tool import PushNotifyTool
+from .tools.finance_tool import YFinanceTool
 from .schemas import CandidateList, MetricsList, ScoredList
 from .tools.notify_tool import PushNotifyTool
 
 
-search_tool = SerperDevTool()
+search_tool = RobustSearchTool()
 web_rag = WebsiteSearchTool()
 scraper = ScrapeWebsiteTool()
 code_tool = CodeInterpreterTool()
+finance_tool = YFinanceTool()
 notify_tool = PushNotifyTool()
 
 
-default_llm = LLM(model="openai/gpt-4o-mini")
-orchestrator_llm = LLM(model="openai/gpt-4o")
+default_llm = LLM(model="gpt-4o-mini")
+function_llm = LLM(model="gpt-4o-mini")
 
 EMBEDDER_CONFIG = {
     "provider": "openai",
@@ -42,6 +44,7 @@ class EquityLens:
             verbose=True,
             tools=[search_tool, web_rag],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -51,6 +54,7 @@ class EquityLens:
             verbose=True,
             tools=[search_tool, web_rag, scraper],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -58,8 +62,9 @@ class EquityLens:
         return Agent(
             config=self.agents_config["fundamental_screener"],
             verbose=True,
-            tools=[search_tool, web_rag, scraper, code_tool],
+            tools=[search_tool, finance_tool, web_rag, scraper, code_tool],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -69,6 +74,7 @@ class EquityLens:
             verbose=True,
             tools=[search_tool, web_rag, scraper],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -78,6 +84,7 @@ class EquityLens:
             verbose=True,
             tools=[code_tool],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -87,6 +94,7 @@ class EquityLens:
             verbose=True,
             tools=[notify_tool],
             llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @task
@@ -149,7 +157,7 @@ class EquityLens:
             ],
             process=Process.sequential,
             verbose=True,
-            planning=True,
+            planning=False,
             memory=True,
             embedder=EMBEDDER_CONFIG,
             short_term_memory=ShortTermMemory(

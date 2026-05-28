@@ -15,7 +15,6 @@ universe_mapper:
   allow_delegation: false
   cache: true
   max_iter: 12
-  llm: openai/gpt-4o-mini
 
 equity_scout:
   role: >
@@ -34,7 +33,6 @@ equity_scout:
   allow_delegation: false
   cache: true
   max_iter: 18
-  llm: openai/gpt-4o-mini
 
 fundamental_screener:
   role: >
@@ -55,7 +53,6 @@ fundamental_screener:
   cache: true
   max_iter: 20
   respect_context_window: true
-  llm: openai/gpt-4o-mini
 
 market_analyst:
   role: >
@@ -75,7 +72,6 @@ market_analyst:
   allow_delegation: false
   cache: true
   max_iter: 18
-  llm: openai/gpt-4o-mini
 
 valuation_scorer:
   role: >
@@ -96,7 +92,6 @@ valuation_scorer:
   allow_delegation: false
   cache: true
   max_iter: 18
-  llm: openai/gpt-4o-mini
 
 investment_advisor:
   role: >
@@ -117,7 +112,6 @@ investment_advisor:
   allow_delegation: false
   cache: true
   max_iter: 16
-  llm: openai/gpt-4o-mini
 
 manager:
   role: >
@@ -136,4 +130,3 @@ manager:
   cache: true
   max_iter: 20
   respect_context_window: true
-  llm: openai/gpt-4o

@@ -41,10 +41,12 @@ screen_fundamentals:
   description: >
     Today is {current_date}. For each candidate collect recent comparable financial
     metrics. Apply hard filter: market_cap_usd >= {min_size}. Guidance:
+    - Use the Get Financial Data tool for each ticker to retrieve accurate
+      real-time financial metrics directly. Call it once per ticker.
+    - Only fall back to web search if the tool returns an error for a ticker.
     - Use TTM or latest fiscal values; include as_of_date for each row.
     - Do NOT fabricate numbers; set null when unavailable and note the source.
     - All data must reflect filings or market data available as of {current_date}.
-    - Reject any data older than 12 months from {current_date}.
     - Keep units explicit in USD where applicable.
   expected_output: >
     A JSON array ONLY (no prose). One row per ticker with fields:

@@ -1,5 +1,5 @@
 from crewai.tools import BaseTool
-from typing import Type
+from typing import Type, Union
 from pydantic import BaseModel, Field
 import os
 import requests
@@ -7,7 +7,7 @@ import requests
 
 class NotificationInput(BaseModel):
     """Input schema for push notification"""
-    message: str = Field(..., description="The message to send to the user.")
+    message: Union[str, dict] = Field(..., description="The message to send to the user.")
 
 
 class PushNotifyTool(BaseTool):
@@ -19,10 +19,15 @@ class PushNotifyTool(BaseTool):
     )
     args_schema: Type[BaseModel] = NotificationInput
 
-    def _run(self, message: str) -> str:
-        # Handle case where message is passed as a dict by the LLM
+    def _run(self, message: Union[str, dict]) -> str:
+        # Handle case where LLM passes a dict instead of a plain string
         if isinstance(message, dict):
-            message = message.get("description", str(message))
+            message = (
+                message.get("message") or
+                message.get("description") or
+                message.get("text") or
+                str(message)
+            )
 
         pushover_user = os.getenv("PUSHOVER_USER")
         pushover_token = os.getenv("PUSHOVER_TOKEN")
