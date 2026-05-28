@@ -22,8 +22,11 @@ discover_candidates:
     Rules:
     - Only include companies listed on NYSE, NASDAQ, LSE, Euronext, TSE, HKEX,
       or SGX with market cap above {min_size} USD.
-    - Exclude private companies, OTC-only listings, and conglomerates where
-      {universe} exposure is incidental or minor.
+    - Strictly exclude private companies. Before including any company, verify
+      it has a publicly listed stock on a major exchange. If in doubt, exclude it.
+      A company being well-known or having high valuation does not mean it is public.
+    - Exclude OTC-only listings and conglomerates where {universe} exposure is
+      incidental or minor.
     - Normalize tickers to UPPERCASE; include exchange if known; deduplicate
       strictly by ticker.
     - For European companies use yfinance-compatible tickers with exchange
