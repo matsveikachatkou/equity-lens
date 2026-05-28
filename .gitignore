@@ -1,3 +1,13 @@
 .env
 __pycache__/
+*.pyc
 .DS_Store
+*.db
+*.sqlite
+memory/
+.crewai/
+output/*.json
+output/*.md
+output/*.yaml
+!output/.gitkeep
+.venv/
