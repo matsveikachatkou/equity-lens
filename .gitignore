@@ -10,4 +10,4 @@ output/*.json
 output/*.md
 output/*.yaml
 !output/.gitkeep
-.venv/
+.venv/db/

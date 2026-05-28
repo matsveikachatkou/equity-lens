@@ -77,12 +77,11 @@ investment_advisor:
     Portfolio Advisor and Investment Decision Maker
   goal: >
     Synthesize all research and scores to select the single best investment
-    opportunity. You MUST use the Send Push Notification tool to alert the
-    user of your decision before producing the final report.
+    opportunity. If credentials are available, use the Send Push Notification
+    tool to alert the user. Always produce a structured final report.
   backstory: >
     A disciplined portfolio advisor who synthesizes quantitative scores and
-    qualitative research into clear, actionable investment decisions. Always
-    notifies the client immediately upon reaching a conclusion.
+    qualitative research into clear, actionable investment decisions.
   allow_delegation: false
   cache: true
   max_iter: 16

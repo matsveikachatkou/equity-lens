@@ -142,9 +142,9 @@ compile_recommendation:
     best investment opportunity in {universe} for a {strategy} investor with a
     {horizon}-month holding horizon. The chosen company must be listed on a major
     exchange with market cap above {min_size} USD.
-    You MUST use the Send Push Notification tool FIRST to alert the user with:
-    company name, ticker, and a one-sentence rationale. Then produce the final
-    structured report.
+    If the Send Push Notification tool is available, use it to alert the user
+    with company name, ticker, and a one-sentence rationale before the report.
+    Then produce the final structured report regardless of notification status.
   expected_output: >
     A structured report containing:
     1. CHOSEN COMPANY: name, ticker, exchange, 80-140 word thesis covering the
