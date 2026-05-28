@@ -21,17 +21,20 @@ class YFinanceTool(BaseTool):
     args_schema: Type[BaseModel] = FinanceInput
 
     def _get_usd_rate(self, currency: str) -> float:
-        """Fetch live FX rate to USD via yfinance, with hardcoded fallback."""
         if currency == "USD":
             return 1.0
         try:
-            fx = yf.Ticker(f"{currency}=X")
+            # Try direct USD rate first (e.g. KRWUSD=X)
+            fx = yf.Ticker(f"{currency}USD=X")
             rate = fx.info.get("regularMarketPrice")
-            if rate:
+            if rate and rate < 1:  # Valid USD rate should be < 1 for most currencies
                 return float(rate)
+            # If rate > 1, it's likely inverted (USD per currency), so invert it
+            if rate and rate > 1:
+                return 1.0 / float(rate)
         except Exception:
             pass
-        # Hardcoded fallback rates
+        # Hardcoded fallback rates (USD per 1 unit of currency)
         fallback = {
             "EUR": 1.08, "GBP": 1.27, "JPY": 0.0067,
             "KRW": 0.00072, "HKD": 0.128, "TWD": 0.031,
@@ -48,6 +51,7 @@ class YFinanceTool(BaseTool):
                 str(ticker)
             )
         ticker = str(ticker).strip().upper()
+        print(f"DEBUG: YFinanceTool called with ticker: {ticker}")  # add this
 
         # Try original ticker first, then common exchange suffixes
         attempts = [ticker, f"{ticker}.L", f"{ticker}.AS", f"{ticker}.PA",
@@ -83,6 +87,8 @@ class YFinanceTool(BaseTool):
                 market_cap_usd = int(Decimal(str(market_cap_local)) * Decimal(str(fx_rate)))
             else:
                 market_cap_usd = None
+
+            print(f"DEBUG: {ticker} raw_mcap={market_cap_local} currency={currency} fx={fx_rate} usd={market_cap_usd}")
 
             data = {
                 "ticker": used_ticker,
