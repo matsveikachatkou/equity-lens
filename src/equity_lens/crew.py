@@ -169,4 +169,5 @@ class EquityLens:
                 crew=None,
                 embedder_config=EMBEDDER_CONFIG,
             ),
+            max_rpm=10,
         )

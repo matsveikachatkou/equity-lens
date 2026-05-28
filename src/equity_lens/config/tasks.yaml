@@ -30,6 +30,10 @@ discover_candidates:
       suffix: .L for London, .AS for Amsterdam, .PA for Paris, .DE for
       Frankfurt, .MI for Milan. Example: WISE.L, ADYEN.AS.
     - Provide a concise match reason (max 140 chars) for each candidate.
+    - If fewer than 4 companies meet all criteria in {geography}, expand
+      search to global markets to reach at least 4 candidates.
+    - If fewer than 4 companies meet all criteria, return the best 2-3
+      that do qualify rather than searching indefinitely.
     - All data must be current as of {current_date}.
   expected_output: >
     A JSON array ONLY. No prose, no preamble, no explanation. Start directly

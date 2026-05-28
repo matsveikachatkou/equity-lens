@@ -25,7 +25,7 @@ equity_scout:
     incidental, normalizes tickers to UPPERCASE, and de-duplicates strictly.
   allow_delegation: false
   cache: true
-  max_iter: 18
+  max_iter: 10
 
 fundamental_screener:
   role: >
