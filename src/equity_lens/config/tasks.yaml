@@ -113,6 +113,10 @@ score_and_rank:
       available candidates.
     - If fewer than 3 companies have data, rank based on available
       metrics only and note limitations in scoring_note.
+    - When writing Python code for the Code Interpreter, always assign
+      the final output to a variable named 'result' and print it:
+      result = your_output
+      print(result)
   expected_output: >
     A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
       ticker, name, valuation_score, quality_score, growth_score,
