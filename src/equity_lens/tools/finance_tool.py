@@ -51,7 +51,6 @@ class YFinanceTool(BaseTool):
                 str(ticker)
             )
         ticker = str(ticker).strip().upper()
-        print(f"DEBUG: YFinanceTool called with ticker: {ticker}")  # add this
 
         # Try original ticker first, then common exchange suffixes
         attempts = [ticker, f"{ticker}.L", f"{ticker}.AS", f"{ticker}.PA",
@@ -87,8 +86,6 @@ class YFinanceTool(BaseTool):
                 market_cap_usd = int(Decimal(str(market_cap_local)) * Decimal(str(fx_rate)))
             else:
                 market_cap_usd = None
-
-            print(f"DEBUG: {ticker} raw_mcap={market_cap_local} currency={currency} fx={fx_rate} usd={market_cap_usd}")
 
             data = {
                 "ticker": used_ticker,

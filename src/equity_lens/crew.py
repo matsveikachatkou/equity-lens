@@ -155,7 +155,7 @@ class EquityLens:
                 self.compile_recommendation(),
             ],
             process=Process.sequential,
-            verbose=False,
+            verbose=True,
             planning=False,
             memory=True,
             embedder=EMBEDDER_CONFIG,
