@@ -24,14 +24,14 @@ class FundamentalMetrics(BaseModel):
     market_cap_usd: Optional[float] = None
     pe_ttm: Optional[float] = None
     ev_ebitda: Optional[float] = None
-    revenue_cagr_3y: Optional[float] = None
+    revenue_growth_yoy: Optional[float] = None
     operating_margin_ttm: Optional[float] = None
     fcf_margin_ttm: Optional[float] = None
     net_debt_to_ebitda: Optional[float] = None
     dividend_yield: Optional[float] = None
     as_of_date: Optional[str] = Field(None, description="Date of most recent data point")
     notes: Optional[str] = None
-
+    
 
 class ScoredEquity(BaseModel):
     ticker: str
