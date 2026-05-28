@@ -44,7 +44,7 @@ class YFinanceTool(BaseTool):
                 "operating_margin_ttm": round(info.get("operatingMargins", 0) * 100, 2) if info.get("operatingMargins") else None,
                 "fcf_margin_ttm": None,  # calculated below
                 "net_debt_to_ebitda": None,  # calculated below
-                "dividend_yield": round(info.get("dividendYield", 0) * 100, 2) if info.get("dividendYield") else None,
+                "dividend_yield": round(info.get("dividendYield", 0), 4) if info.get("dividendYield") else None,
                 "as_of_date": "current",
                 "notes": f"Data from yfinance. Sector: {info.get('sector')}. Industry: {info.get('industry')}."
             }
