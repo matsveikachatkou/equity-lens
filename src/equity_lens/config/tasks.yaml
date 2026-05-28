@@ -21,14 +21,13 @@ discover_candidates:
     traded companies with primary exposure to {universe} in {geography} markets.
     Rules:
     - Only include companies listed on NYSE, NASDAQ, LSE, Euronext, TSE, HKEX,
-      or SGX with market cap above {min_size} USD.
+      SGX, KRX, or TWSE with market cap above {min_size} USD.
     - Strictly exclude private companies. Before including any company, verify
       it has a publicly listed stock on a major exchange. If in doubt, exclude it.
       A company being well-known or having high valuation does not mean it is public.
-    - Exclude OTC-only listings and conglomerates where {universe} exposure is
-      incidental or minor.
-    - Normalize tickers to UPPERCASE; include exchange if known; deduplicate
-      strictly by ticker.
+    - NEVER use OTC or ADR tickers for Asian or European companies. Always use
+      the primary exchange ticker. If a company trades on both a local exchange
+      and as an ADR/OTC in the US, use the primary local exchange ticker.
     - Use yfinance-compatible ticker formats for all exchanges:
       US stocks: plain ticker (NVDA, AAPL, MSFT)
       London (LSE): ticker.L (WISE.L, AZN.L)
@@ -36,11 +35,13 @@ discover_candidates:
       Paris (Euronext FR): ticker.PA (MC.PA, BNP.PA)
       Frankfurt (XETRA): ticker.DE (SAP.DE, SIE.DE)
       Milan (Borsa Italiana): ticker.MI (ENI.MI, ISP.MI)
-      Tokyo (TSE): ticker.T (6857.T, 7203.T)
-      Seoul (KRX): ticker.KS (000660.KS, 005930.KS)
-      Hong Kong (HKEX): ticker.HK (0700.HK, 9988.HK)
-      Taiwan (TWSE): ticker.TW (2330.TW, 2454.TW)
+      Tokyo (TSE): numeric.T (8035.T, 6857.T, 7203.T)
+      Seoul (KRX): numeric.KS (005930.KS, 000660.KS)
+      Hong Kong (HKEX): numeric.HK (0700.HK, 9988.HK)
+      Taiwan (TWSE): numeric.TW (2330.TW, 2454.TW)
       Singapore (SGX): ticker.SI (D05.SI, O39.SI)
+    - Before finalizing any non-US ticker, search to verify the correct
+      primary exchange ticker format. Do not guess.
     - Provide a concise match reason (max 140 chars) for each candidate.
     - If fewer than 4 companies meet all criteria in {geography}, expand
       search to global markets to reach at least 4 candidates.
@@ -50,7 +51,7 @@ discover_candidates:
   expected_output: >
     A JSON array ONLY. No prose, no preamble, no explanation. Start directly
     with [ and end with ]. Each object must include:
-      ticker (str, UPPERCASE with exchange suffix if non-US), name (str),
+      ticker (str, primary exchange ticker with correct suffix), name (str),
       exchange (str), country (str), market_cap_usd (float),
       match_reason (str, max 140 chars)
   agent: equity_scout
