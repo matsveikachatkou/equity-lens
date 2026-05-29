@@ -20,17 +20,18 @@ class YFinanceTool(BaseTool):
     args_schema: Type[BaseModel] = FinanceInput
 
     def _get_usd_rate(self, currency: str) -> float:
-        """Fetch live FX rate to USD via yfinance, with hardcoded fallback."""
         if currency == "USD":
             return 1.0
         try:
-            fx = yf.Ticker(f"{currency}=X")
+            fx = yf.Ticker(f"{currency}USD=X")
             rate = fx.info.get("regularMarketPrice")
-            if rate:
+            if rate and 0 < rate < 10:  # Valid USD rate per 1 unit of foreign currency
                 return float(rate)
+            # If rate > 10 it's inverted (foreign currency per USD), invert it
+            if rate and rate > 10:
+                return 1.0 / float(rate)
         except Exception:
             pass
-        # Hardcoded fallback rates
         fallback = {
             "EUR": 1.08, "GBP": 1.27, "JPY": 0.0067,
             "KRW": 0.00072, "HKD": 0.128, "TWD": 0.031,
