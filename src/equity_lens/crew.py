@@ -19,13 +19,6 @@ default_llm = LLM(model="gpt-4o-mini")
 function_llm = LLM(model="gpt-4o-mini")
 scorer_llm = LLM(model="gpt-4o")
 
-EMBEDDER_CONFIG = {
-    "provider": "openai",
-    "config": {
-        "model": "text-embedding-3-small",
-    },
-}
-
 
 @CrewBase
 class EquityLens:
@@ -70,8 +63,8 @@ class EquityLens:
             config=self.agents_config["market_analyst"],
             verbose=True,
             tools=[search_tool, web_rag, scraper],
-            llm=scorer_llm,
-            function_calling_llm=scorer_llm,
+            llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -80,8 +73,8 @@ class EquityLens:
             config=self.agents_config["valuation_scorer"],
             verbose=True,
             tools=[code_tool],
-            llm=default_llm,
-            function_calling_llm=function_llm,
+            llm=scorer_llm,
+            function_calling_llm=scorer_llm,
         )
 
     @agent
@@ -155,15 +148,5 @@ class EquityLens:
             process=Process.sequential,
             verbose=True,
             planning=False,
-            memory=True,
-            embedder=EMBEDDER_CONFIG,
-            short_term_memory=ShortTermMemory(
-                crew=None,
-                embedder_config=EMBEDDER_CONFIG,
-            ),
-            long_term_memory=LongTermMemory(),
-            entity_memory=EntityMemory(
-                crew=None,
-                embedder_config=EMBEDDER_CONFIG,
-            ),
+            memory=False,
         )
