@@ -1,7 +1,6 @@
 from crewai.tools import BaseTool
 from typing import Type, Any
 from pydantic import BaseModel, Field
-from decimal import Decimal
 import yfinance as yf
 import json
 
@@ -21,20 +20,17 @@ class YFinanceTool(BaseTool):
     args_schema: Type[BaseModel] = FinanceInput
 
     def _get_usd_rate(self, currency: str) -> float:
+        """Fetch live FX rate to USD via yfinance, with hardcoded fallback."""
         if currency == "USD":
             return 1.0
         try:
-            # Try direct USD rate first (e.g. KRWUSD=X)
-            fx = yf.Ticker(f"{currency}USD=X")
+            fx = yf.Ticker(f"{currency}=X")
             rate = fx.info.get("regularMarketPrice")
-            if rate and rate < 1:  # Valid USD rate should be < 1 for most currencies
+            if rate:
                 return float(rate)
-            # If rate > 1, it's likely inverted (USD per currency), so invert it
-            if rate and rate > 1:
-                return 1.0 / float(rate)
         except Exception:
             pass
-        # Hardcoded fallback rates (USD per 1 unit of currency)
+        # Hardcoded fallback rates
         fallback = {
             "EUR": 1.08, "GBP": 1.27, "JPY": 0.0067,
             "KRW": 0.00072, "HKD": 0.128, "TWD": 0.031,
@@ -82,10 +78,7 @@ class YFinanceTool(BaseTool):
             currency = info.get("currency", "USD")
             fx_rate = self._get_usd_rate(currency)
             market_cap_local = info.get("marketCap")
-            if market_cap_local:
-                market_cap_usd = int(Decimal(str(market_cap_local)) * Decimal(str(fx_rate)))
-            else:
-                market_cap_usd = None
+            market_cap_usd = round(market_cap_local * fx_rate) if market_cap_local else None
 
             data = {
                 "ticker": used_ticker,
