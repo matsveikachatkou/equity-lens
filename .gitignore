@@ -11,3 +11,4 @@ output/*.md
 output/*.yaml
 !output/.gitkeep
 .venv/db/
+db/
