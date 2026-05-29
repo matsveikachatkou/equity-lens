@@ -13,27 +13,27 @@ Universe Mapping → Candidate Discovery → Fundamental Screening → Research 
 | Agent | Role | Tools |
 |---|---|---|
 | `universe_mapper` | Translates input universe into precise search vocabulary | Search, WebRAG |
-| `equity_scout` | Discovers 4-6 publicly traded candidates | Search, WebRAG, Scraper |
-| `fundamental_screener` | Collects real financial metrics via yfinance | Search, WebRAG, Scraper, yFinance |
+| `equity_scout` | Discovers 4-6 publicly traded candidates with correct exchange tickers | Search, WebRAG, Scraper |
+| `fundamental_screener` | Collects real financial metrics via yFinance | Search, WebRAG, Scraper, yFinance |
 | `market_analyst` | Produces per-company research notes | Search, WebRAG, Scraper |
-| `valuation_scorer` | Computes rank-based composite scores | Code Interpreter |
-| `investment_advisor` | Selects best opportunity, sends notification, writes report | Push Notification |
+| `valuation_scorer` | Computes rank-based composite scores | GPT-4o |
+| `investment_advisor` | Selects best opportunity and writes structured report | GPT-4o |
 
 ## Key Design Decisions
 
 **Sequential process over hierarchical** — deterministic execution with clear artifact handoff between stages. Each agent receives structured output from the previous stage via explicit context dependencies.
 
-**Real financial data via yFinance** — the `fundamental_screener` uses a custom `YFinanceTool` to pull live market data (PE, EV/EBITDA, margins, FCF, net debt) directly from Yahoo Finance rather than relying on web scraping. European tickers are handled automatically with exchange suffixes (`.L`, `.AS`, `.PA`, `.DE`, `.MI`).
+**Real financial data via yFinance** — the `fundamental_screener` uses a custom `YFinanceTool` to pull live market data (PE, EV/EBITDA, margins, FCF, net debt) directly from Yahoo Finance. Market caps are normalized to USD using live FX rates. European and Asian tickers are handled automatically with exchange suffixes (`.L`, `.AS`, `.PA`, `.DE`, `.T`, `.KS`, `.HK`, `.TW`).
 
 **Rank-based scoring** — relative valuation using PE, EV/EBITDA, margins, and revenue growth. Robust to missing data via neutral rank imputation. Configurable weighting via `--strategy` flag.
 
 **Date injection** — `{current_date}` flows through every agent and task prompt, enforcing data freshness and preventing stale financial data from prior years entering the pipeline.
 
-**Tradability enforcement** — major exchange listing and market cap floor verified at discovery stage and re-enforced at recommendation stage. Private companies and OTC listings are explicitly excluded.
+**Tradability enforcement** — major exchange listing and market cap floor verified at discovery stage. Private companies, OTC-only listings, and ADRs for non-US stocks are explicitly excluded. Primary exchange tickers enforced for all markets.
 
 **Geography auto-expansion** — when fewer than 4 companies meet the geography criteria, the pipeline automatically expands to global markets for comparison while prioritizing the specified geography in the final selection.
 
-**Robust tool wrappers** — custom wrappers around SerperDev and CodeInterpreter handle edge cases where the LLM passes malformed tool arguments, preventing pipeline failures.
+**Robust tool wrappers** — custom wrappers around SerperDev handle edge cases where the LLM passes malformed tool arguments, preventing pipeline failures.
 
 **Artifact chain** — numbered outputs (`01_` through `06_`) written to `output/` for full auditability and comparison across runs.
 
@@ -73,8 +73,6 @@ Edit `.env` with your API keys:
 ```
 OPENAI_API_KEY=your_openai_api_key
 SERPER_API_KEY=your_serper_api_key
-PUSHOVER_USER=your_pushover_user_key      # optional
-PUSHOVER_TOKEN=your_pushover_app_token    # optional
 ```
 
 ## Usage
@@ -86,11 +84,14 @@ uv run equity_lens
 # Semiconductors, US market, growth strategy
 uv run equity_lens --universe "Semiconductors" --geography "US" --strategy growth
 
-# European fintech, balanced strategy, 12-month horizon
+# European fintech, balanced strategy
 uv run equity_lens --universe "Fintech" --geography "Europe" --strategy balanced
 
-# Healthcare Technology, Europe, value strategy
-uv run equity_lens --universe "Healthcare Technology" --geography "Europe" --strategy value
+# Asian semiconductors, growth strategy
+uv run equity_lens --universe "Semiconductors" --geography "Asia" --strategy growth
+
+# Global cybersecurity, growth strategy
+uv run equity_lens --universe "Cybersecurity" --geography "global" --strategy growth
 
 # Large cap only (min $10B market cap)
 uv run equity_lens --universe "Cloud Computing" --min-size 10000000000
@@ -110,24 +111,26 @@ uv run equity_lens --universe "AI Infrastructure" --geography "US" --strategy gr
 | `--min-size` | 2000000000 | Minimum market cap in USD |
 | `--date` | today | Override date for testing |
 
+## Tested Universes
+
+| Universe | Geography | Strategy | Selected | Rationale |
+|---|---|---|---|---|
+| Semiconductors | US | growth | NVDA | 85.2% YoY revenue growth, 65.6% operating margin, AI chip dominance |
+| Semiconductors | Asia | growth | TSM | Leading foundry, NVIDIA partnership, 35% revenue growth |
+| Fintech | Europe | balanced | Adyen (ADYEN.AS) | 49.5% operating margin, strong payments infrastructure |
+| Healthcare Technology | Europe | value | Smith & Nephew (SNN.L) | Reasonable P/E 20.8x, consistent revenue growth, RISE strategy |
+| Cybersecurity | global | growth | CrowdStrike (CRWD) | AI-native Falcon platform, 23.3% revenue growth, cloud-native edge |
+| Electric Vehicles | global | growth | Tesla (TSLA) | Superior charging network, production expansion, autonomous driving |
+
 ## Requirements
 
 - Python 3.11 (Intel Mac) or 3.11–3.12 (Apple Silicon / Linux)
 - OpenAI API key
 - Serper API key
-- Pushover account (optional — for push notifications)
-
-## Tested universes
-
-| Universe | Geography | Strategy | Result |
-|---|---|---|---|
-| Semiconductors | US | growth | NVDA selected |
-| Fintech | Europe | balanced | Adyen selected |
-| Healthcare Technology | Europe | value | Smith & Nephew selected |
 
 ## Limitations
 
-- `YFinanceTool` provides real market data but `revenue_growth_yoy` reflects TTM YoY growth, not a true 3-year CAGR
-- European tickers with non-standard formats may require manual ticker correction
-- Push notifications require a Pushover account
+- `YFinanceTool` `revenue_growth_yoy` reflects TTM YoY growth, not a true 3-year CAGR
+- European and Asian tickers depend on yfinance coverage — some smaller companies may not be available
 - For production use, replace web scraping in the research stage with a dedicated financial data API (e.g. Polygon.io, Alpha Vantage)
+- Pipeline cost: approximately $0.30–0.80 per run depending on universe size and geography
