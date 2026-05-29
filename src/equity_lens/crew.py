@@ -5,10 +5,8 @@ from crewai.memory.entity.entity_memory import EntityMemory
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import WebsiteSearchTool, ScrapeWebsiteTool, SerperDevTool
 from .tools.code_tool import RobustCodeTool
-from .tools.notify_tool import PushNotifyTool
 from .tools.finance_tool import YFinanceTool
 from .schemas import CandidateList, MetricsList, ScoredList
-from .tools.notify_tool import PushNotifyTool
 
 
 search_tool = SerperDevTool()
@@ -16,7 +14,6 @@ web_rag = WebsiteSearchTool()
 scraper = ScrapeWebsiteTool()
 code_tool = RobustCodeTool()
 finance_tool = YFinanceTool()
-notify_tool = PushNotifyTool()
 
 default_llm = LLM(model="gpt-4o-mini")
 function_llm = LLM(model="gpt-4o-mini")
@@ -91,7 +88,7 @@ class EquityLens:
         return Agent(
             config=self.agents_config["investment_advisor"],
             verbose=True,
-            tools=[notify_tool],
+            tools=[],
             llm=default_llm,
             function_calling_llm=function_llm,
         )

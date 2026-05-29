@@ -77,8 +77,9 @@ investment_advisor:
     Portfolio Advisor and Investment Decision Maker
   goal: >
     Synthesize all research and scores to select the single best investment
-    opportunity. If credentials are available, use the Send Push Notification
-    tool to alert the user. Always produce a structured final report.
+    opportunity. Produce a structured final report with clear rationale,
+    covering the chosen company, rejected companies, key risks, and scoring
+    summary.
   backstory: >
     A disciplined portfolio advisor who synthesizes quantitative scores and
     qualitative research into clear, actionable investment decisions.
