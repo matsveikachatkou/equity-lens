@@ -50,7 +50,7 @@ class EquityLens:
         return Agent(
             config=self.agents_config["fundamental_screener"],
             verbose=True,
-            tools=[search_tool, finance_tool, web_rag, scraper, code_tool],
+            tools=[search_tool, finance_tool, web_rag, scraper],
             llm=default_llm,
             function_calling_llm=function_llm,
         )
