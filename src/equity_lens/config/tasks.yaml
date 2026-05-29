@@ -49,11 +49,14 @@ discover_candidates:
       that do qualify rather than searching indefinitely.
     - All data must be current as of {current_date}.
   expected_output: >
-    A JSON array ONLY. No prose, no preamble, no explanation. Start directly
-    with [ and end with ]. Each object must include:
+    A JSON array ONLY. No prose, no preamble, no explanation, no markdown
+    code fences. Start your response with [ and end with ]. Do not wrap
+    in a root object. Each object must include:
       ticker (str, primary exchange ticker with correct suffix), name (str),
       exchange (str), country (str), market_cap_usd (float),
       match_reason (str, max 140 chars)
+    Example format:
+    [{"ticker": "NVDA", "name": "NVIDIA", "exchange": "NASDAQ", "country": "US", "market_cap_usd": 5000000000000, "match_reason": "Leading AI chip maker"}]
   agent: equity_scout
   output_file: output/02_candidates.json
   context:
@@ -123,10 +126,15 @@ score_and_rank:
       available candidates.
     - If fewer than 3 companies have data, rank based on available
       metrics only and note limitations in scoring_note.
-    - When writing Python code for the Code Interpreter, always assign
-      the final output to a variable named 'result' and print it:
-      result = your_output
-      print(result)
+    - When writing Python code for the Code Interpreter:
+      * Use ONLY pandas and pure Python. Do NOT use numpy — it is not
+        available in the sandbox. Use list comprehensions and built-in
+        sorted() and enumerate() functions instead.
+      * Always assign the final output to a variable named 'result'
+        and print it: result = your_output and print(result)
+      * Define all variables before using them. Never reference a
+        variable before it is assigned. Keep all logic in a single
+        flat code block — do not use functions or nested scopes.
   expected_output: >
     A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
       ticker, name, valuation_score, quality_score, growth_score,
