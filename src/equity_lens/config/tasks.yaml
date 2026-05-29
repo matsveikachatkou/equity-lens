@@ -135,6 +135,10 @@ score_and_rank:
       * Define all variables before using them. Never reference a
         variable before it is assigned. Keep all logic in a single
         flat code block — do not use functions or nested scopes.
+      * Each Code Interpreter call is completely independent — variables
+        from previous calls do not persist. Always include ALL data and
+        ALL logic in a single complete self-contained code block. Never
+        reference variables from a previous code execution.
   expected_output: >
     A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
       ticker, name, valuation_score, quality_score, growth_score,

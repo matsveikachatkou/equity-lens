@@ -17,6 +17,7 @@ finance_tool = YFinanceTool()
 
 default_llm = LLM(model="gpt-4o-mini")
 function_llm = LLM(model="gpt-4o-mini")
+scorer_llm = LLM(model="gpt-4o")
 
 EMBEDDER_CONFIG = {
     "provider": "openai",
@@ -69,8 +70,8 @@ class EquityLens:
             config=self.agents_config["market_analyst"],
             verbose=True,
             tools=[search_tool, web_rag, scraper],
-            llm=default_llm,
-            function_calling_llm=function_llm,
+            llm=scorer_llm,
+            function_calling_llm=scorer_llm,
         )
 
     @agent
@@ -89,8 +90,8 @@ class EquityLens:
             config=self.agents_config["investment_advisor"],
             verbose=True,
             tools=[],
-            llm=default_llm,
-            function_calling_llm=function_llm,
+            llm=scorer_llm,
+            function_calling_llm=scorer_llm,
         )
 
     @task
