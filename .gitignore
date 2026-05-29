@@ -12,3 +12,4 @@ output/*.yaml
 !output/.gitkeep
 .venv/db/
 db/
+crewai-rag-tool.lock
