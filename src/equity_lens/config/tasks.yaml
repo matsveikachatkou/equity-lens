@@ -115,30 +115,11 @@ score_and_rank:
       value:    60% valuation, 20% quality, 20% growth
       growth:   20% valuation, 20% quality, 60% growth
       balanced: 40% valuation, 30% quality, 30% growth
-    Impute missing values with neutral ranks. Document tie-breakers:
+    Impute missing values with neutral ranks equal to the midpoint of
+    available candidates. Document tie-breakers:
     higher quality_score, then higher growth_score, then larger market_cap_usd.
-    State exact method in scoring_note.
-    Important safeguards:
-    - If code execution fails after 2 attempts, compute scores manually
-      using simple arithmetic. Never leave composite_score as an
-      unevaluated expression — always compute to a plain number.
-    - Treat any None value as neutral rank equal to the midpoint of
-      available candidates.
-    - If fewer than 3 companies have data, rank based on available
-      metrics only and note limitations in scoring_note.
-    - When writing Python code for the Code Interpreter:
-      * Use ONLY pandas and pure Python. Do NOT use numpy — it is not
-        available in the sandbox. Use list comprehensions and built-in
-        sorted() and enumerate() functions instead.
-      * Always assign the final output to a variable named 'result'
-        and print it: result = your_output and print(result)
-      * Define all variables before using them. Never reference a
-        variable before it is assigned. Keep all logic in a single
-        flat code block — do not use functions or nested scopes.
-      * Each Code Interpreter call is completely independent — variables
-        from previous calls do not persist. Always include ALL data and
-        ALL logic in a single complete self-contained code block. Never
-        reference variables from a previous code execution.
+    Compute all scores as plain numbers — never leave composite_score as
+    an unevaluated expression.
   expected_output: >
     A JSON array ONLY (no prose) sorted by composite_score descending. Fields:
       ticker, name, valuation_score, quality_score, growth_score,

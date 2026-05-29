@@ -4,7 +4,6 @@ from crewai.memory.long_term.long_term_memory import LongTermMemory
 from crewai.memory.entity.entity_memory import EntityMemory
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import WebsiteSearchTool, ScrapeWebsiteTool, SerperDevTool
-from .tools.code_tool import RobustCodeTool
 from .tools.finance_tool import YFinanceTool
 from .schemas import CandidateList, MetricsList, ScoredList
 
@@ -12,12 +11,11 @@ from .schemas import CandidateList, MetricsList, ScoredList
 search_tool = SerperDevTool()
 web_rag = WebsiteSearchTool()
 scraper = ScrapeWebsiteTool()
-code_tool = RobustCodeTool()
 finance_tool = YFinanceTool()
 
 default_llm = LLM(model="gpt-4o-mini")
 function_llm = LLM(model="gpt-4o-mini")
-scorer_llm = LLM(model="gpt-4o")
+advisor_llm = LLM(model="gpt-4o")
 
 
 @CrewBase
@@ -72,9 +70,9 @@ class EquityLens:
         return Agent(
             config=self.agents_config["valuation_scorer"],
             verbose=True,
-            tools=[code_tool],
-            llm=scorer_llm,
-            function_calling_llm=scorer_llm,
+            tools=[],
+            llm=default_llm,
+            function_calling_llm=function_llm,
         )
 
     @agent
@@ -83,8 +81,8 @@ class EquityLens:
             config=self.agents_config["investment_advisor"],
             verbose=True,
             tools=[],
-            llm=scorer_llm,
-            function_calling_llm=scorer_llm,
+            llm=advisor_llm,
+            function_calling_llm=advisor_llm,
         )
 
     @task
