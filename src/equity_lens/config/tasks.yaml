@@ -66,6 +66,9 @@ screen_fundamentals:
   description: >
     Today is {current_date}. For each candidate collect recent comparable financial
     metrics. Apply hard filter: market_cap_usd >= {min_size}. Guidance:
+    - You MUST call the Get Financial Data tool for EVERY ticker in the
+      candidate list without exception. Do not stop until all tickers
+      have been processed. Process them one by one in sequence.
     - Use the Get Financial Data tool for each ticker to retrieve accurate
       real-time financial metrics directly. Call it once per ticker.
     - Only fall back to web search if the tool returns an error for a ticker.
