@@ -16,7 +16,7 @@ Universe Mapping → Candidate Discovery → Fundamental Screening → Research 
 | `equity_scout` | Discovers 4-6 publicly traded candidates with correct exchange tickers | Search, WebRAG, Scraper |
 | `fundamental_screener` | Collects real financial metrics via yFinance | Search, WebRAG, Scraper, yFinance |
 | `market_analyst` | Produces per-company research notes | Search, WebRAG, Scraper |
-| `valuation_scorer` | Computes rank-based composite scores | GPT-4o |
+| `valuation_scorer` | Computes rank-based composite scores | GPT-4o-mini |
 | `investment_advisor` | Selects best opportunity and writes structured report | GPT-4o |
 
 ## Key Design Decisions
@@ -133,4 +133,4 @@ uv run equity_lens --universe "AI Infrastructure" --geography "US" --strategy gr
 - `YFinanceTool` `revenue_growth_yoy` reflects TTM YoY growth, not a true 3-year CAGR
 - European and Asian tickers depend on yfinance coverage — some smaller companies may not be available
 - For production use, replace web scraping in the research stage with a dedicated financial data API (e.g. Polygon.io, Alpha Vantage)
-- Pipeline cost: approximately $0.30–0.80 per run depending on universe size and geography
+- Pipeline cost: approximately $0.10–0.50 per run depending on universe size and geography
